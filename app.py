@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from chatbot import chatbot_response   
-
+import qrcode
+import io
+from fastapi.responses import StreamingResponse
 app = FastAPI()
 
 # -----------------------------
@@ -61,3 +63,19 @@ def panic_alert(loc: Location):
 def chat(msg: ChatMessage):
     reply = chatbot_response(msg.message)
     return {"reply": reply}
+
+@app.get("/generate_qr/{tourist_id}")
+def generate_qr(tourist_id: str):
+    # For now, just encode TouristID, later we can put JSON
+    data = {
+        "tourist_id": tourist_id,
+        "name": "Demo Tourist",
+        "trip_id": "TRIP123",
+        "emergency_contact": "+911234567890"
+    }
+
+    img = qrcode.make(str(data))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="image/png")
