@@ -23,6 +23,12 @@ class ChatMessage(BaseModel):
     tourist_id: str
     message: str
 
+class TouristInfo(BaseModel):
+    tourist_id: str
+    name: str
+    trip_id: str
+    emergency_contact: str
+
 # -----------------------------
 # Mock DB
 # -----------------------------
@@ -63,6 +69,19 @@ def panic_alert(loc: Location):
 def chat(msg: ChatMessage):
     reply = chatbot_response(msg.message)
     return {"reply": reply}
+
+
+@app.post("/generate_qr")
+def generate_qr(info: TouristInfo):
+    # Convert the tourist info into QR code data
+    data = info.dict()
+
+    img = qrcode.make(str(data))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="image/png")
+
 
 @app.get("/generate_qr/{tourist_id}")
 def generate_qr(tourist_id: str):
